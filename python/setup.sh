@@ -36,3 +36,19 @@ pyenv global 3.13.1
 ##  Create a new virtual environment:
 # pyenv virtualenv 3.13.1 venv
 # pyenv activate venv
+
+# Install poetry 
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Verify the version 
+poetry --version 
+
+# Add poetry completions in oh my zsh 
+mkdir $ZSH_CUSTOM/plugins/poetry
+poetry completions zsh > $ZSH_CUSTOM/plugins/poetry/_poetry
+
+# Add to ~/.zshrc
+plugins(
+	poetry
+	...
+	)
