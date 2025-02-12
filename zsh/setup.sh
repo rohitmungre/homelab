@@ -39,3 +39,10 @@ source ~/.zshrc
 # nano ~/.zshrc
 # Find the ZSH_THEME="robbyrussell"
 # Replace with ZSH_THEME="alanpeabody"
+
+# add in .zshrc file plugins the following 
+terraform 
+# https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/terraform
+
+docker 
+https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker
