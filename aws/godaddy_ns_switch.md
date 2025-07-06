@@ -409,11 +409,3 @@ dig +short www.example.com
 It should resolve to your CloudFront or S3 website endpoint’s DNS name (for alias records), not to an IP.
 
 ---
-
-### Next Steps
-
-* Once you’ve verified DNS → S3 is working, you can swap out `index.html` with your real front-end (whether that’s an S3-packaged build or a Docker image behind CloudFront/ALB).
-* If you go containerized, you’ll point Route 53 (via an Alias A record) at your load balancer or CloudFront distribution instead of the S3 website endpoint—but the same DNS-testing steps apply.
-
-This approach ensures both your DNS configuration and your S3 hosting are correctly wired before you plug in your real application.
-
