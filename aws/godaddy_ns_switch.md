@@ -141,7 +141,7 @@ First, prepare a JSON config `cf-config.json`:
     "Quantity": 1,
     "Items": [{
       "Id": "S3-$DOMAIN",
-      "DomainName": "example.com.s3-website-eu-west-1.amazonaws.com",
+      "DomainName": "example.com.s3-website.eu-west-1.amazonaws.com",
       "OriginPath": "",
       "CustomOriginConfig": {
         "HTTPPort": 80,
@@ -326,3 +326,94 @@ https://example.com  and  https://www.example.com
 ```
 
 will serve your static site via CloudFront, backed by S3, with SSL from ACM.
+
+---
+
+## 7. Verify routing
+
+To verify that your Route 53 hosted zone is correctly routing to your S3 bucket (even before you have real front-end content), you can do two things: (1) use Route 53’s DNS-testing API, and (2) upload a minimal “placeholder” object so you can actually hit the bucket’s website endpoint via your domain.
+
+---
+
+## A. Test DNS via the AWS CLI
+
+Route 53 provides a handy `test-dns-answer` command that simulates a DNS lookup against your hosted zone:
+
+```bash
+# (1) Make sure these env vars are set:
+export HOSTED_ZONE_ID=Z123456ABCDEFG   # your zone’s ID, e.g. "Z2ABCDEF..."
+export DOMAIN=example.com              # or your real domain
+
+# (2) Test the A-record answer
+aws route53 test-dns-answer \
+  --hosted-zone-id $HOSTED_ZONE_ID \
+  --record-name $DOMAIN \
+  --record-type A \
+  --query 'RecordData' --output text
+```
+
+* If you see back the alias target (e.g. your CloudFront or S3 website endpoint domain), DNS is wired correctly.
+* You can also test the “www” record by changing `--record-name` to `www.$DOMAIN`.
+
+---
+
+## B. Upload a Placeholder to S3 and Hit It
+
+Because S3 static-website hosting returns 404 (or 403) when there’s no `index.html`, let’s create a tiny test page:
+
+1. **Create a test HTML file**
+
+   ```bash
+   echo "<!doctype html><html><body><h1>🛠 DNS → S3 OK!</h1></body></html>" \
+     > test-index.html
+   ```
+
+2. **Upload it as `index.html`**
+
+   ```bash
+   aws s3 cp test-index.html s3://$DOMAIN/index.html \
+     --acl public-read
+   ```
+
+3. **Invalidate your CloudFront cache** (if using CloudFront)
+
+   ```bash
+   aws cloudfront create-invalidation \
+     --distribution-id YOUR_CF_ID \
+     --paths "/index.html"
+   ```
+
+4. **Hit your domain**
+
+   ```bash
+   # HTTP
+   curl -I http://$DOMAIN/
+   # HTTPS (via CloudFront)
+   curl -I https://$DOMAIN/
+   ```
+
+   You should get `200 OK` and see your custom HTML.
+
+---
+
+## C. Check with `dig` or `nslookup`
+
+From any shell (even your local laptop), you can confirm the final DNS resolution:
+
+```bash
+dig +short example.com
+# or for www:
+dig +short www.example.com
+```
+
+It should resolve to your CloudFront or S3 website endpoint’s DNS name (for alias records), not to an IP.
+
+---
+
+### Next Steps
+
+* Once you’ve verified DNS → S3 is working, you can swap out `index.html` with your real front-end (whether that’s an S3-packaged build or a Docker image behind CloudFront/ALB).
+* If you go containerized, you’ll point Route 53 (via an Alias A record) at your load balancer or CloudFront distribution instead of the S3 website endpoint—but the same DNS-testing steps apply.
+
+This approach ensures both your DNS configuration and your S3 hosting are correctly wired before you plug in your real application.
+
