@@ -1,4 +1,4 @@
-## Setup for keeping a GitHub profile and a Bitbucket profile side-by-side in your WSL environment:
+## Setup for keeping a GitHub profile and a Azure devops profile side-by-side in your WSL environment:
 
 ---
 
