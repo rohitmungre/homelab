@@ -200,6 +200,32 @@ CF_ZONE_ID="Z2FDTNDATAQYW2"
 
 ---
 
+### 4.1. Determine Public vs. Private Hosted Zone
+
+#### A. In the AWS Console
+
+1. Sign in to the AWS Console and open **Route 53 → Hosted zones**.
+2. Look at the **Type** column for your zone:
+
+   * **Public** → Answers DNS queries from the Internet.
+   * **Private** → Answers only within one or more VPCs.
+
+#### B. Via the AWS CLI
+
+Replace `<HOSTED_ZONE_ID>` with your zone ID (e.g. `Z1ABCDEF...`):
+
+```bash
+aws route53 get-hosted-zone \
+  --id <HOSTED_ZONE_ID> \
+  --query '{Name:HostedZone.Name,Private:HostedZone.Config.PrivateZone}' \
+  --output text
+```
+
+* If `Private` is `False`, it’s a **public** zone.
+* If `Private` is `True`, it’s a **private** zone.
+
+---
+
 ### 5. Point Route 53 Records at CloudFront
 
 ```bash
@@ -245,18 +271,51 @@ echo "Route 53 A-alias records created for CloudFront."
 
 ## 6. Update GoDaddy Nameservers
 
-AWS CLI can’t speak to GoDaddy DNS out of the box. Log into GoDaddy’s dashboard (or use their API SDK) and replace your current nameservers with the four NS records shown in the Route 53 hosted‐zone details:
+AWS CLI can’t speak to GoDaddy DNS out of the box. Log into GoDaddy’s dashboard (or use their API SDK) and replace your current nameservers with the four NS records shown in the Route 53 hosted‐zone details
+
+### 6.1. Retrieve Your Route 53 Nameservers
+
+Every public hosted zone comes with a delegation set (4 NS records). To list them:
+
+```bash
+aws route53 get-hosted-zone \
+  --id <HOSTED_ZONE_ID> \
+  --query 'DelegationSet.NameServers' \
+  --output text
+```
+
+You’ll see four names like:
 
 ```
-# Example output from `aws route53 get-hosted-zone --id $HOSTED_ZONE_ID`
-NS:
-  ns-123.awsdns-45.com
-  ns-678.awsdns-90.org
-  ns-234.awsdns-56.net
-  ns-789.awsdns-12.co.uk
+ns-123.awsdns-45.com
+ns-678.awsdns-90.org
+ns-234.awsdns-56.net
+ns-789.awsdns-12.co.uk
 ```
 
-Once you’ve saved those in GoDaddy, give DNS a few minutes to propagate. After that, visiting:
+---
+
+### 6.2. Point Your GoDaddy Domain at Those NS Records
+
+1. **Log in** to GoDaddy and go to **My Products → Domains**.
+2. Find your domain (`example.com`) and click **DNS** or **Manage DNS**.
+3. Under **Nameservers**, click **Change**.
+4. Select **Custom** (instead of “Default” or “Premium DNS”).
+5. **Enter the four AWS nameservers** exactly as listed (one per line).
+6. **Save** your changes.
+
+---
+
+### 6.3. Verify Delegation
+
+After you update GoDaddy, check globally:
+
+```bash
+dig +short NS example.com
+```
+
+You should see the same four `ns-*.awsdns-*` names. Once they match, your public hosted zone in Route 53 is live and ready to serve DNS for your domain.
+After that, visiting:
 
 ```
 https://example.com  and  https://www.example.com
