@@ -131,6 +131,7 @@ First, prepare a JSON config `cf-config.json`:
 ```json
 {
   "CallerReference": "cf-$(date +%s)",
+  "Comment": "CloudFront distribution for example.com",
   "Aliases": {
     "Quantity": 2,
     "Items": ["example.com", "www.example.com"]
@@ -146,7 +147,7 @@ First, prepare a JSON config `cf-config.json`:
         "HTTPPort": 80,
         "HTTPSPort": 443,
         "OriginProtocolPolicy": "http-only",
-        "OriginSSLProtocols": {
+        "OriginSslProtocols": {
           "Quantity": 1,
           "Items": ["TLSv1.2"]
         }
@@ -168,7 +169,10 @@ First, prepare a JSON config `cf-config.json`:
       "QueryString": false,
       "Cookies": {"Forward": "none"}
     },
-    "TrustedSigners": {"Enabled": false, "Quantity": 0}
+    "TrustedSigners": {"Enabled": false, "Quantity": 0},
+    "MinTTL": 0,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000
   },
   "ViewerCertificate": {
     "ACMCertificateArn": "REPLACE_WITH_CERT_ARN",
