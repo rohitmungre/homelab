@@ -54,3 +54,18 @@ Here are two ways to generate an AWS Access Key ID and Secret Access Key—via t
 * **Use IAM Roles**: Wherever possible (e.g. EC2, Lambda, ECS), attach an IAM role instead of distributing long-lived keys.
 
 Once you have your Access Key ID and Secret Access Key, run `aws configure` (or set them as environment variables) to start using the AWS CLI or SDKs.
+
+
+---
+
+## Assign AdministratorAccess to User
+
+Once you’re signed in as root:
+
+* Navigate to Services → IAM → Users.
+* Attach the `AdministratorAccess` policy to “User”:
+  * Click on User.
+  * Go to the Permissions tab → Add permissions → Attach policies directly.
+  * Search for `AdministratorAccess`, check it, and click Next: Review → Add permissions.
+
+
