@@ -1,6 +1,3 @@
-Here’s a concise primer on Amazon EC2—what it is, its key concepts, and the AWS CLI commands you’ll use most often to manage your instances.
-
----
 
 ## 1. What is Amazon EC2?
 
